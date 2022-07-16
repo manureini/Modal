@@ -15,14 +15,22 @@ public partial class BlazoredModalInstance : IDisposable
     [Parameter] public Guid Id { get; set; }
 
     private string? Position { get; set; }
-    private string? ModalClass { get; set; }
+    private string? Class { get; set; }
     private bool HideHeader { get; set; }
     private bool HideCloseButton { get; set; }
     private bool DisableBackgroundCancel { get; set; }
     private string? OverlayAnimationClass { get; set; }
     private string? OverlayCustomClass { get; set; }
-    private ModalAnimationType? AnimationType { get; set; }
+    private ModalAnimation? Animation { get; set; }
     private bool ActivateFocusTrap { get; set; }
+    private string AnimationDuration
+    {
+        get
+        {
+            var duration = Animation?.Duration * 1000;
+            return FormattableString.Invariant($"{duration}ms");
+        }
+    }
 
     public bool UseCustomLayout { get; set; }
 
@@ -78,12 +86,16 @@ public partial class BlazoredModalInstance : IDisposable
     public async Task CloseAsync(ModalResult modalResult)
     {
         // Fade out the modal, and after that actually remove it
-        if (AnimationType is ModalAnimationType.FadeInOut)
+        if (Animation?.Type is ModalAnimationType.FadeOut or ModalAnimationType.FadeInOut)
         {
-            OverlayAnimationClass += " fade-out";
+            Class += " blazored-modal-fade-out";
+            OverlayAnimationClass += " blazored-modal-fade-out";
             StateHasChanged();
             
-            await Task.Delay(400); // Needs to be a bit more than the animation time because of delays in the animation being applied between server and client (at least when using blazor server side), I think.
+            if (Animation.Duration > 0)
+            {
+                await Task.Delay((int)(Animation.Duration * 1000) + 100); // Needs to be a bit more than the animation time because of delays in the animation being applied between server and client (at least when using blazor server side), I think.
+            }
         }
 
         await Parent.DismissInstance(Id, modalResult);
@@ -103,9 +115,9 @@ public partial class BlazoredModalInstance : IDisposable
 
     private void ConfigureInstance()
     {
-        AnimationType = SetAnimation();
+        Animation = SetAnimation();
         Position = SetPosition();
-        ModalClass = SetModalClass();
+        Class = SetClass();
         HideHeader = SetHideHeader();
         HideCloseButton = SetHideCloseButton();
         DisableBackgroundCancel = SetDisableBackgroundCancel();
@@ -148,28 +160,25 @@ public partial class BlazoredModalInstance : IDisposable
         }
         else
         {
-            position = ModalPosition.TopCenter;
+            position = ModalPosition.Center;
         }
 
         switch (position)
         {
-            case ModalPosition.TopCenter:
-                return "";
+            case ModalPosition.Center:
+                return "blazored-modal-center";
 
             case ModalPosition.TopLeft:
-                return "position-topleft";
+                return "blazored-modal-topleft";
 
             case ModalPosition.TopRight:
-                return "position-topright";
-            
-            case ModalPosition.Middle:
-                return "position-middle";
+                return "blazored-modal-topright";
 
             case ModalPosition.BottomLeft:
-                return "position-bottomleft";
+                return "blazored-modal-bottomleft";
 
             case ModalPosition.BottomRight:
-                return "position-bottomright";
+                return "blazored-modal-bottomright";
 
             case ModalPosition.Custom:
                 if (!string.IsNullOrWhiteSpace(Options.PositionCustomClass))
@@ -180,55 +189,11 @@ public partial class BlazoredModalInstance : IDisposable
                 throw new InvalidOperationException("Position set to Custom without a PositionCustomClass set");
 
             default:
-                return "";
-        }
-    }
-    
-    private string SetSize()
-    {
-        ModalSize size;
-
-        if (Options.Size.HasValue)
-        {
-            size = Options.Size.Value;
-        }
-        else if (GlobalModalOptions.Size.HasValue)
-        {
-            size = GlobalModalOptions.Size.Value;
-        }
-        else
-        {
-            size = ModalSize.Medium;
-        }
-
-        switch (size)
-        {
-            case ModalSize.Small:
-                return "size-small";
-
-            case ModalSize.Medium:
-                return "size-medium";
-
-            case ModalSize.Large:
-                return "size-large";
-            
-            case ModalSize.ExtraLarge:
-                return "size-extra-large";
-
-            case ModalSize.Custom:
-                if (!string.IsNullOrWhiteSpace(Options.SizeCustomClass))
-                    return Options.SizeCustomClass;
-                if (!string.IsNullOrWhiteSpace(GlobalModalOptions.SizeCustomClass))
-                    return GlobalModalOptions.SizeCustomClass;
-
-                throw new InvalidOperationException("Size set to Custom without a SizeCustomClass set");
-
-            default:
-                return "size-medium";
+                return "blazored-modal-center";
         }
     }
 
-    private string SetModalClass()
+    private string SetClass()
     {
         var modalClass = string.Empty;
 
@@ -239,19 +204,36 @@ public partial class BlazoredModalInstance : IDisposable
             modalClass = GlobalModalOptions.Class;
 
         if (string.IsNullOrWhiteSpace(modalClass))
-        {
             modalClass = "blazored-modal";
-            modalClass += $" {SetSize()}";
-        }
+
+        string animationClass = SetAnimationClass();
+        if (!string.IsNullOrWhiteSpace(animationClass))
+            modalClass += $" {animationClass}";
+
+        string scrollableClass = SetScrollableClass();
+        if (!string.IsNullOrWhiteSpace(scrollableClass))
+            modalClass += $" {scrollableClass}";
 
         return modalClass;
     }
 
-    private ModalAnimationType SetAnimation() 
-        => Options.AnimationType ?? GlobalModalOptions.AnimationType ?? ModalAnimationType.FadeInOut;
+    private ModalAnimation SetAnimation() 
+        => Options.Animation ?? GlobalModalOptions.Animation ?? new ModalAnimation(ModalAnimationType.None, 0);
 
     private string SetAnimationClass() 
-        => AnimationType is ModalAnimationType.FadeInOut ? "fade-in" : string.Empty;
+        => Animation?.Type is ModalAnimationType.FadeIn or ModalAnimationType.FadeInOut 
+            ? "blazored-modal-fade-in" 
+            : string.Empty;
+
+    private string SetScrollableClass()
+    {
+        if (Options.ContentScrollable == true || GlobalModalOptions.ContentScrollable == true)
+        {
+            return "blazored-modal-scrollable";
+        }
+
+        return string.Empty;
+    }
 
     private bool SetHideHeader()
     {
