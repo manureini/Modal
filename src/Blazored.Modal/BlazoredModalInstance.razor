@@ -43,7 +43,12 @@ else
 
         <div id="_@($"{Id.ToString("N")}-overlay")" 
              class="blazored-modal-overlay @OverlayCustomClass @OverlayAnimationClass" 
-             @onclick="HandleBackgroundClick"></div>
+             @onclick="HandleBackgroundClick" @onclick:stopPropagation
+             @ontouchstart:preventDefault @ontouchstart:stopPropagation
+             @ontouchend:preventDefault @ontouchend:stopPropagation
+             @ontouchmove:preventDefault @ontouchmove:stopPropagation     
+             @onscroll:preventDefault @onscroll:stopPropagation
+             ></div>
     
         <FocusTrap @ref="_focusTrap" IsActive="ActivateFocusTrap">
             <div id="_@Id.ToString("N")" class="@Class" role="dialog" aria-modal="true" >

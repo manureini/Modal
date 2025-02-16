@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.Routing
 
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
 <CascadingValue Value="this">
     <CascadingValue Value="_globalModalOptions">
@@ -39,8 +40,8 @@
             throw new InvalidOperationException($"{GetType()} requires a cascading parameter of type {nameof(IModalService)}.");
         }
 
-        ((ModalService) CascadedModalService).OnModalInstanceAdded += Update;
-        ((ModalService) CascadedModalService).OnModalCloseRequested += CloseInstance;
+        ((ModalService)CascadedModalService).OnModalInstanceAdded += Update;
+        ((ModalService)CascadedModalService).OnModalCloseRequested += CloseInstance;
         NavigationManager.LocationChanged += CancelModals;
 
         _globalModalOptions.Class = Class;
@@ -83,6 +84,7 @@
         {
             modal.Dismiss(result);
             _modals.Remove(modal);
+            await UpdateBodyScrolling();
             await InvokeAsync(StateHasChanged);
             OnModalClosed?.Invoke();
         }
@@ -96,13 +98,27 @@
         }
 
         _modals.Clear();
+        await UpdateBodyScrolling();
         await InvokeAsync(StateHasChanged);
     }
 
     private async void Update(ModalReference modalReference)
     {
         _modals.Add(modalReference);
+        await UpdateBodyScrolling();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateBodyScrolling()
+    {
+        if (_modals.Count > 0)
+        {
+            await JsRuntime.InvokeVoidAsync("eval", "document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden';");
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("eval", "document.documentElement.style.overflow = ''; document.body.style.overflow = '';");
+        }
     }
 
     private ModalReference? GetModalReference(Guid id)
