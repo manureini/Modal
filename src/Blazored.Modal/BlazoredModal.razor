@@ -20,6 +20,7 @@
     [Parameter] public bool? HideHeader { get; set; }
     [Parameter] public bool? HideCloseButton { get; set; }
     [Parameter] public bool? DisableBackgroundCancel { get; set; }
+    [Parameter] public bool? DisableEscapeKey { get; set; }
     [Parameter] public string? OverlayCustomClass { get; set; }
     [Parameter] public ModalPosition? Position { get; set; }
     [Parameter] public string? PositionCustomClass { get; set; }
@@ -33,6 +34,7 @@
     private readonly Collection<ModalReference> _modals = new();
     private readonly ModalOptions _globalModalOptions = new();
     private IJSObjectReference? _styleFunctions;
+    private DotNetObjectReference<BlazoredModal>? _dotNetObjRef;
     private bool _haveActiveModals;
 
     internal event Action? OnModalClosed;
@@ -44,12 +46,13 @@
             throw new InvalidOperationException($"{GetType()} requires a cascading parameter of type {nameof(IModalService)}.");
         }
 
-        ((ModalService) CascadedModalService).OnModalInstanceAdded += Update;
-        ((ModalService) CascadedModalService).OnModalCloseRequested += CloseInstance;
+        ((ModalService)CascadedModalService).OnModalInstanceAdded += Update;
+        ((ModalService)CascadedModalService).OnModalCloseRequested += CloseInstance;
         NavigationManager.LocationChanged += CancelModals;
 
         _globalModalOptions.Class = Class;
         _globalModalOptions.DisableBackgroundCancel = DisableBackgroundCancel;
+        _globalModalOptions.DisableEscapeKey = DisableEscapeKey;
         _globalModalOptions.HideCloseButton = HideCloseButton;
         _globalModalOptions.HideHeader = HideHeader;
         _globalModalOptions.Position = Position;
@@ -68,6 +71,24 @@
         if (firstRender)
         {
             _styleFunctions = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Blazored.Modal/BlazoredModal.razor.js");
+
+            _dotNetObjRef = DotNetObjectReference.Create(this);
+            if (DisableEscapeKey is not true && _dotNetObjRef is not null)
+                await _styleFunctions.InvokeVoidAsync("addEscapeKeyHandler", _dotNetObjRef);
+        }
+    }
+
+    [JSInvokable("HandleEscapeKey")]
+    public async Task HandleEscapeKeyAsync()
+    {
+        if (DisableEscapeKey is true || !_modals.Any())
+            return;
+
+        if (_modals.LastOrDefault() is { } lastModalReference)
+        {
+            if (lastModalReference.ModalInstanceRef?.Options.DisableEscapeKey is true)
+                return;
+            await CloseInstance(lastModalReference, ModalResult.Cancel());
         }
     }
 
@@ -129,12 +150,12 @@
         if (!_haveActiveModals)
         {
             _haveActiveModals = true;
-            if (_styleFunctions is not null)
-            {
-                await _styleFunctions.InvokeVoidAsync("setBodyStyle");
-            }
+            if (_styleFunctions is null)
+                return;
+            
+            await _styleFunctions.InvokeVoidAsync("setBodyStyle");
         }
-        
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -150,8 +171,25 @@
         }
     }
 
+    private async Task RemoveEscapeKeyHandler()
+    {
+        if (_styleFunctions is null)
+            return;
+
+        try
+        {
+            await _styleFunctions.InvokeVoidAsync("removeEscapeKeyHandler");
+        }
+        catch (JSDisconnectedException)
+        {
+            // Ignored. Browser is not there any more.
+        }
+    }
+
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
+        await RemoveEscapeKeyHandler();
+        _dotNetObjRef?.Dispose();
         if (_styleFunctions is not null)
         {
             try
@@ -163,6 +201,5 @@
                 // If the browser is gone, we don't need it to clean up any browser-side state
             }
         }
-    } 
-
+    }
 }
