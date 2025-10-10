@@ -9,7 +9,9 @@
     <CascadingValue Value="_globalModalOptions">
         @foreach (var modal in _modals)
         {
-            @modal.ModalInstance
+            <DynamicComponent @key="modal.Id"
+                              Type="typeof(KeyedComponent)"
+                              Parameters="KeyedParams(modal)" />
         }
     </CascadingValue>
 </CascadingValue>
@@ -134,7 +136,7 @@
                 await _styleFunctions.InvokeVoidAsync("setBodyStyle");
             }
         }
-        
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -150,6 +152,11 @@
         }
     }
 
+    private Dictionary<string, object?> KeyedParams(ModalReference modal) => new()
+    {
+        [nameof(KeyedComponent.ChildContent)] = modal.ModalInstance
+    };
+
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
         if (_styleFunctions is not null)
@@ -163,6 +170,6 @@
                 // If the browser is gone, we don't need it to clean up any browser-side state
             }
         }
-    } 
+    }
 
 }
