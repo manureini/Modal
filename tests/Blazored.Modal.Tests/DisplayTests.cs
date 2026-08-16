@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 using Blazored.Modal.Tests.Assets;
 using Blazored.Modal.Services;
+using System.Threading.Tasks;
 using static Bunit.ComponentParameterFactory;
 
 namespace Blazored.Modal.Tests
@@ -123,6 +124,39 @@ namespace Blazored.Modal.Tests
 
             // Assert
             Assert.Empty(cut.FindAll(".bm-container"));
+        }
+        
+        [Fact]
+        public async Task ModalHidesWhenEscapeKeyPressed()
+        {
+            // Arrange
+            var modalService = Services.GetService<IModalService>();
+            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            modalService.Show<TestComponent>();
+            
+            // Act
+            await cut.InvokeAsync( () => cut.Instance.HandleEscapeKeyAsync());
+            
+            // Assert
+            Assert.Empty(cut.FindAll(".bm-container"));
+        }
+
+        [Fact]
+        public async Task TopMostModalHidesOnEscapeKeyPressedWhenMultipleAreVisible()
+        {
+            // Arrange
+            var modalService = Services.GetService<IModalService>();
+            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            modalService.Show<TestComponent>("First");
+            modalService.Show<TestComponent>("Last");
+            
+            // Act
+            await cut.InvokeAsync( () => cut.Instance.HandleEscapeKeyAsync());
+            
+            // Assert
+            var instances = cut.FindAll(".bm-container");
+            Assert.DoesNotContain("Last", cut.Find(".bm-title").InnerHtml);
+            Assert.Single(instances);
         }
     }
 }

@@ -19,6 +19,7 @@ public partial class BlazoredModalInstance : IDisposable
     private bool HideHeader { get; set; }
     private bool HideCloseButton { get; set; }
     private bool DisableBackgroundCancel { get; set; }
+    private bool DisableEscapeKey { get; set; }
     private string? OverlayAnimationClass { get; set; }
     private string? OverlayCustomClass { get; set; }
     private ModalAnimationType? AnimationType { get; set; }
@@ -133,6 +134,7 @@ public partial class BlazoredModalInstance : IDisposable
         HideHeader = SetHideHeader();
         HideCloseButton = SetHideCloseButton();
         DisableBackgroundCancel = SetDisableBackgroundCancel();
+        DisableEscapeKey = SetDisableEscapeKey();
         UseCustomLayout = SetUseCustomLayout();
         OverlayCustomClass = SetOverlayCustomClass();
         ActivateFocusTrap = SetActivateFocusTrap();
@@ -207,7 +209,7 @@ public partial class BlazoredModalInstance : IDisposable
                 return "";
         }
     }
-    
+
     private string SetSize()
     {
         ModalSize size;
@@ -352,6 +354,15 @@ public partial class BlazoredModalInstance : IDisposable
             await CancelAsync();
             _listenToBackgroundClicks = false;
         }
+    }
+
+    private bool SetDisableEscapeKey()
+    {
+        if (Options.DisableEscapeKey.HasValue)
+            return Options.DisableEscapeKey.Value;
+        
+        return GlobalModalOptions.DisableEscapeKey.HasValue &&
+               GlobalModalOptions.DisableEscapeKey.Value;
     }
 
     private void ListenToBackgroundClick()

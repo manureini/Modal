@@ -3,6 +3,7 @@ using Blazored.Modal.Tests.Assets;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 using Xunit;
 using static Bunit.ComponentParameterFactory;
 
@@ -265,6 +266,26 @@ namespace Blazored.Modal.Tests
 
             // Assert
             Assert.NotNull(cut.Find(".my-custom-size"));
+        }
+
+        [Fact]
+        public async Task ModalDoesNotCloseWhenDisableEscapeKeySetToTrueInOptions()
+        {
+            // Arrange
+            var options = new ModalOptions
+            {
+                DisableEscapeKey = true
+            };
+            var modalService = Services.GetService<IModalService>();
+            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            
+            modalService.Show<TestComponent>("", options);
+            
+            // Act
+            await cut.InvokeAsync( () => cut.Instance.HandleEscapeKeyAsync());
+            
+            // Assert
+            Assert.NotEmpty(cut.FindAll(".bm-container"));
         }
     }
 }
