@@ -20,7 +20,8 @@ public partial class BlazoredModalInstance : IDisposable
     private bool HideCloseButton { get; set; }
     private bool DisableBackgroundCancel { get; set; }
     private bool DisableEscapeKey { get; set; }
-    private string? OverlayAnimationClass { get; set; }
+    public string? ModalAnimationClass { get; set; }
+    public string? OverlayAnimationClass { get; set; }
     private string? OverlayCustomClass { get; set; }
     private ModalAnimationType? AnimationType { get; set; }
     private bool ActivateFocusTrap { get; set; }
@@ -96,19 +97,30 @@ public partial class BlazoredModalInstance : IDisposable
     public async Task CloseAsync(ModalResult modalResult)
     {
         // Fade out the modal, and after that actually remove it
-        if (AnimationType is ModalAnimationType.FadeInOut)
+        if (AnimationType is not ModalAnimationType.None && AnimationType is not ModalAnimationType.FadeIn && 
+            AnimationType is not ModalAnimationType.MoveIn && AnimationType is not ModalAnimationType.PopIn)
         {
-            OverlayAnimationClass += " fade-out";
+            OverlayAnimationClass = AnimationType switch
+            {
+                ModalAnimationType.FadeInOut or ModalAnimationType.FadeOut or
+                ModalAnimationType.MoveInOut or ModalAnimationType.MoveOut or
+                ModalAnimationType.PopInOut => "fade-out",
+                _ => string.Empty,
+            };
+
+            FocusTrap?.TriggerRender();
+
+            ModalAnimationClass = AnimationType switch
+            {
+                ModalAnimationType.FadeInOut or ModalAnimationType.FadeOut => "fade-out",
+                ModalAnimationType.MoveInOut or ModalAnimationType.MoveOut => "move-out",
+                ModalAnimationType.PopInOut => "pop-out",
+                _ => string.Empty,
+            };
+
             StateHasChanged();
             
             await Task.Delay(400); // Needs to be a bit more than the animation time because of delays in the animation being applied between server and client (at least when using blazor server side), I think.
-        }
-        else if (AnimationType is ModalAnimationType.PopInOut)
-        {
-            OverlayAnimationClass += " pop-out";
-            StateHasChanged();
-
-            await Task.Delay(400);
         }
 
         await Parent.DismissInstance(Id, modalResult);
@@ -128,6 +140,7 @@ public partial class BlazoredModalInstance : IDisposable
 
     private void ConfigureInstance()
     {
+        UseCustomLayout = SetUseCustomLayout();
         AnimationType = SetAnimation();
         Position = SetPosition();
         ModalClass = SetModalClass();
@@ -138,7 +151,8 @@ public partial class BlazoredModalInstance : IDisposable
         UseCustomLayout = SetUseCustomLayout();
         OverlayCustomClass = SetOverlayCustomClass();
         ActivateFocusTrap = SetActivateFocusTrap();
-        OverlayAnimationClass = SetAnimationClass();
+        OverlayAnimationClass = SetOverlayAnimationClass();
+        ModalAnimationClass = SetModalAnimationClass();
         Parent.OnModalClosed += AttemptFocus;
     }
 
@@ -277,11 +291,20 @@ public partial class BlazoredModalInstance : IDisposable
     }
 
     private ModalAnimationType SetAnimation() 
-        => Options.AnimationType ?? GlobalModalOptions.AnimationType ?? ModalAnimationType.FadeInOut;
+        => Options.AnimationType ?? GlobalModalOptions.AnimationType ?? (!UseCustomLayout ? ModalAnimationType.FadeInOut : ModalAnimationType.None);
 
-    private string SetAnimationClass() => AnimationType switch
+    private string SetOverlayAnimationClass() => AnimationType switch
     {
-        ModalAnimationType.FadeInOut => "fade-in",
+        ModalAnimationType.FadeInOut or ModalAnimationType.FadeIn or
+        ModalAnimationType.MoveInOut or ModalAnimationType.MoveIn or
+        ModalAnimationType.PopInOut or ModalAnimationType.PopIn => "fade-in",
+        _ => string.Empty
+    };
+
+    private string SetModalAnimationClass() => AnimationType switch
+    {
+        ModalAnimationType.FadeInOut or ModalAnimationType.FadeIn => "fade-in",
+        ModalAnimationType.MoveInOut or ModalAnimationType.MoveIn => "move-in",
         ModalAnimationType.PopInOut or ModalAnimationType.PopIn => "pop-in",
         _ => string.Empty,
     };
