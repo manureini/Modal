@@ -98,7 +98,7 @@ public partial class BlazoredModalInstance : IDisposable
     {
         // Fade out the modal, and after that actually remove it
         if (AnimationType is not ModalAnimationType.None && AnimationType is not ModalAnimationType.FadeIn && 
-            AnimationType is not ModalAnimationType.MoveIn && AnimationType is not ModalAnimationType.PopIn)
+            AnimationType is not ModalAnimationType.MoveIn && AnimationType is not ModalAnimationType.PopIn && !UseCustomLayout)
         {
             OverlayAnimationClass = AnimationType switch
             {
