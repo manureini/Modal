@@ -37,7 +37,7 @@ public partial class BlazoredModalInstance : IDisposable
         get => _headerContent;
         set
         {
-            _headerContent = value; 
+            _headerContent = value;
             FocusTrap?.Refresh();
         }
     }
@@ -60,12 +60,12 @@ public partial class BlazoredModalInstance : IDisposable
         {
             return true;
         }
-        
+
         _disableNextRender = false;
         return false;
     }
 
-    protected override void OnInitialized() 
+    protected override void OnInitialized()
         => ConfigureInstance();
 
     protected override void OnAfterRender(bool firstRender)
@@ -102,14 +102,14 @@ public partial class BlazoredModalInstance : IDisposable
         {
             FocusTrap.Refresh();
         }
-		
+
         StateHasChanged();
     }
 
     /// <summary>
     /// Closes the modal with a default Ok result />.
     /// </summary>
-    public async Task CloseAsync() 
+    public async Task CloseAsync()
         => await CloseAsync(ModalResult.Ok());
 
     /// <summary>
@@ -119,7 +119,7 @@ public partial class BlazoredModalInstance : IDisposable
     public async Task CloseAsync(ModalResult modalResult)
     {
         // Fade out the modal, and after that actually remove it
-        if (AnimationType is not ModalAnimationType.None && AnimationType is not ModalAnimationType.FadeIn && 
+        if (AnimationType is not ModalAnimationType.None && AnimationType is not ModalAnimationType.FadeIn &&
             AnimationType is not ModalAnimationType.MoveIn && AnimationType is not ModalAnimationType.PopIn && !UseCustomLayout)
         {
             OverlayAnimationClass = AnimationType switch
@@ -141,7 +141,7 @@ public partial class BlazoredModalInstance : IDisposable
             };
 
             StateHasChanged();
-            
+
             await Task.Delay(400); // Needs to be a bit more than the animation time because of delays in the animation being applied between server and client (at least when using blazor server side), I think.
         }
 
@@ -151,13 +151,13 @@ public partial class BlazoredModalInstance : IDisposable
     /// <summary>
     /// Closes the modal and returns a cancelled ModalResult.
     /// </summary>
-    public async Task CancelAsync() 
+    public async Task CancelAsync()
         => await CloseAsync(ModalResult.Cancel());
-    
+
     /// <summary>
     /// Closes the modal returning the specified <paramref name="payload"/> in a cancelled ModalResult.
     /// </summary>
-    public async Task CancelAsync<TPayload>(TPayload payload) 
+    public async Task CancelAsync<TPayload>(TPayload payload)
         => await CloseAsync(ModalResult.Cancel(payload));
 
     private void ConfigureInstance()
@@ -179,7 +179,7 @@ public partial class BlazoredModalInstance : IDisposable
         Parent.OnModalClosed += AttemptFocus;
     }
 
-    private void AttemptFocus() 
+    private void AttemptFocus()
         => _setFocus = true;
 
     private bool SetUseCustomLayout()
@@ -224,7 +224,7 @@ public partial class BlazoredModalInstance : IDisposable
 
             case ModalPosition.TopRight:
                 return "position-topright";
-            
+
             case ModalPosition.Middle:
                 return "position-middle";
 
@@ -274,7 +274,7 @@ public partial class BlazoredModalInstance : IDisposable
 
             case ModalSize.Large:
                 return "size-large";
-            
+
             case ModalSize.ExtraLarge:
                 return "size-extra-large";
 
@@ -285,7 +285,7 @@ public partial class BlazoredModalInstance : IDisposable
                     return GlobalModalOptions.SizeCustomClass;
 
                 throw new InvalidOperationException("Size set to Custom without a SizeCustomClass set");
-            
+
             case ModalSize.Automatic:
                 return "size-automatic";
 
@@ -312,7 +312,7 @@ public partial class BlazoredModalInstance : IDisposable
         return modalClass;
     }
 
-    private ModalAnimationType SetAnimation() 
+    private ModalAnimationType SetAnimation()
         => Options.AnimationType ?? GlobalModalOptions.AnimationType ?? (!UseCustomLayout ? ModalAnimationType.FadeInOut : ModalAnimationType.None);
 
     private string SetOverlayAnimationClass() => AnimationType switch
@@ -405,7 +405,7 @@ public partial class BlazoredModalInstance : IDisposable
     {
         if (Options.DisableEscapeKey.HasValue)
             return Options.DisableEscapeKey.Value;
-        
+
         return GlobalModalOptions.DisableEscapeKey.HasValue &&
                GlobalModalOptions.DisableEscapeKey.Value;
     }
@@ -416,6 +416,6 @@ public partial class BlazoredModalInstance : IDisposable
     private void StopListeningToBackgroundClick()
         => _listenToBackgroundClicks = false;
 
-    void IDisposable.Dispose() 
+    void IDisposable.Dispose()
         => Parent.OnModalClosed -= AttemptFocus;
 }

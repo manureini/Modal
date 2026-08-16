@@ -13,7 +13,7 @@
     {
         base.OnInitialized();
         if (ModalInstance != null && !string.IsNullOrEmpty(Title))
-            ModalInstance.Title = Title;
+            ModalInstance.SetTitle(Title);
 
         if (ChildContent!=null && ModalInstance != null)
         {

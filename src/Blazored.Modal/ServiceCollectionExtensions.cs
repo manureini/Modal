@@ -8,9 +8,6 @@ namespace Blazored.Modal;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddBlazoredModal2(this IServiceCollection services) 
-        => services.AddScoped<IModalService, ModalService>();
-
     public static IServiceCollection AddBlazoredModal(this IServiceCollection services, Action<Settings>? configure = null)
     {
         services.AddScoped<IModalService, ModalService>();
@@ -18,12 +15,12 @@ public static class ServiceCollectionExtensions
         optionsBuilder.Configure(c => c.JsPath = null);
         if (configure != null)
             optionsBuilder.Configure(configure);
-        optionsBuilder.PostConfigure<IConfiguration>((settings, configuration) =>
+        optionsBuilder.PostConfigure<IServiceProvider>((settings, serviceProvider) =>
         {
-            configuration.GetSection("BlazorFluentUI").Bind(settings);
+            var configuration = serviceProvider.GetService<IConfiguration>();
+            configuration?.GetSection("BlazoredModal").Bind(settings);
         });
         return services;
     }
-
 }
 
