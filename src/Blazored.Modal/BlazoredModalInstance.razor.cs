@@ -99,7 +99,7 @@ public partial class BlazoredModalInstance : IDisposable
 
         if (FocusTrap is not null)
         {
-            FocusTrap.SetRenderRequest();
+            FocusTrap.Refresh();
         }
 		
         StateHasChanged();

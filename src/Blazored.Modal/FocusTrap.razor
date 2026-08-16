@@ -18,8 +18,6 @@
     [Parameter] public RenderFragment ChildContent { get; set; } = default!;
     [Parameter] public bool IsActive { get; set; }
 
-    private bool _shouldRender = false;
-
     protected override bool ShouldRender()
     {
         var result = _shouldRender;
