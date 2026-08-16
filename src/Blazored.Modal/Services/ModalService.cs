@@ -71,6 +71,33 @@ public class ModalService : IModalService
         => Show(typeof(T), title, parameters, options);
 
     /// <summary>
+    /// Shows the modal with the component type using the specified <paramref name="title"/>,
+    /// passing the specified <paramref name="parameters"/> and setting a custom CSS style.
+    /// </summary>
+    /// <param name="title">Modal title.</param>
+    /// <param name="parameters">Key/Value collection of parameters to pass to component being displayed.</param>
+    /// <param name="options">Options to configure the modal.</param>
+    public IModalReference Show<T>(string title, object? parameters, ModalOptions? options = null) where T : IComponent 
+        => Show(typeof(T), title, GetParameters(parameters), options ?? new ModalOptions());
+
+    private ModalParameters GetParameters(object? parameters)
+    {
+        var modalParameters = new ModalParameters();
+        if (parameters == null)
+            return modalParameters;
+
+        var properties = parameters.GetType().GetProperties();
+        foreach (var property in properties)
+        {
+            var value = property.GetValue(parameters);
+            if (value != null)
+                modalParameters.Add(property.Name, value);
+        }
+
+        return modalParameters;
+    }
+
+    /// <summary>
     /// Shows the modal with the specific component type.
     /// </summary>
     /// <param name="contentComponent">Type of component to display.</param>

@@ -23,6 +23,10 @@ else
                         {
                             <h3 class="bm-title">@Title</h3>
                         }
+                        @if (HeaderContent != null)
+                        {
+                            @HeaderContent
+                        }
                         @if (!HideCloseButton)
                         {
                             <button type="button" class="bm-close" aria-label="close" @onclick="() => CancelAsync()" @attributes="@_closeBtnAttributes">

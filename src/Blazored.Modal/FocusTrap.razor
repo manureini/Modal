@@ -18,8 +18,15 @@
     [Parameter] public RenderFragment ChildContent { get; set; } = default!;
     [Parameter] public bool IsActive { get; set; }
 
+    private bool _shouldRender = false;
+
     protected override bool ShouldRender()
-        => _shouldRender;
+    {
+        var result = _shouldRender;
+        if (_shouldRender)
+            _shouldRender = false;
+        return result;
+    }
 
     public void TriggerRender()
     {
@@ -33,6 +40,12 @@
         {
             await _startFirst.FocusAsync();
         }
+    }
+
+    internal void Refresh()
+    {
+        _shouldRender = true;
+        StateHasChanged();
     }
 
     internal async Task SetFocus()

@@ -1,0 +1,23 @@
+﻿@code {
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [CascadingParameter]
+    public BlazoredModalInstance? ModalInstance { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (ModalInstance != null && !string.IsNullOrEmpty(Title))
+            ModalInstance.Title = Title;
+
+        if (ChildContent!=null && ModalInstance != null)
+        {
+            ModalInstance.HeaderContent = ChildContent;
+        }
+    }
+}

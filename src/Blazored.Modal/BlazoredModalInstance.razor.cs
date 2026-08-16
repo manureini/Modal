@@ -28,6 +28,19 @@ public partial class BlazoredModalInstance : IDisposable
     public bool UseCustomLayout { get; set; }
     public FocusTrap? FocusTrap { get; set; }
 
+    /// <summary>
+    /// Get
+    /// </summary>
+    public RenderFragment? HeaderContent
+    {
+        get => _headerContent;
+        set
+        {
+            _headerContent = value; 
+            FocusTrap?.Refresh();
+        }
+    }
+
 
     [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "This is assigned in Razor code and isn't currently picked up by the tooling.")]
     private ElementReference _modalReference;
@@ -38,6 +51,7 @@ public partial class BlazoredModalInstance : IDisposable
 
     // Temporarily add a tabindex of -1 to the close button so it doesn't get selected as the first element by activateFocusTrap
     private readonly Dictionary<string, object> _closeBtnAttributes = new() { { "tabindex", "-1" } };
+    private RenderFragment? _headerContent;
 
     protected override bool ShouldRender()
     {

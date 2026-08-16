@@ -1,5 +1,7 @@
 ﻿@using System.Collections.ObjectModel
+@using Blazored.Modal.Configuration
 @using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.Extensions.Options
 
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
@@ -41,6 +43,14 @@
 
     internal event Action? OnModalClosed;
 
+    public BlazoredModal()
+    {
+        if (baseUri != null)
+            return;
+        // creates a lazy object that will determine the baseUri from the first request
+        baseUri = new(() => (NavigationManager.BaseUri ?? "./") + "_content/Blazored.Modal/");
+    }
+
     protected override void OnInitialized()
     {
         if (CascadedModalService == null)
@@ -68,11 +78,49 @@
         _globalModalOptions.ActivateFocusTrap = ActivateFocusTrap;
     }
 
+    #region JavaScript path customization
+    // This allows the javascript to be located on a CDN or shared location for server caching
+    // and/or sharing between multiple apps, or that the path can be customized for the app
+    // automatically base on the BaseUri found in NavigationManager
+
+    [Inject] 
+    private IOptions<Settings> Settings { get; set; } = null!;
+
+    // stores the basePath for all instances
+    private static string? sharedBasePath;
+    
+    // default location for the JS file
+    private const string DefaultLocation = "./";
+
+    // a lazy object that will hold the baseUri
+    private static Lazy<string>? baseUri;
+
+    // gets the baseUri from the lazy object
+    private string? BaseUri => baseUri?.Value;
+
+    // gets the location from the settings
+    private string? Location => Settings.Value.JsPath;
+
+    private string JsPath
+    {
+        get
+        {
+            // if the basePath is already set, return it
+            var basePath = sharedBasePath;
+            if (basePath != null)
+                return basePath;
+            // if the location is null, use the default location
+            var str = Location ?? BaseUri;
+            return sharedBasePath = str + "BlazoredModal.razor.js";
+        }
+    }
+    #endregion
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Blazored.Modal/BlazoredModal.razor.js");
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", JsPath);
 
             _dotNetObjRef = DotNetObjectReference.Create(this);
             if (DisableEscapeKey is not true && _dotNetObjRef is not null)
