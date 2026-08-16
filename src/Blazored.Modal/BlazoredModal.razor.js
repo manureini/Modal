@@ -15,7 +15,7 @@ const getScrollBarWidth = () => {
 }
 const isScrollbarPresent = () => {
     const beforeScrollbarHidden = document.body.clientWidth;
-    const overflowState = document.body?.style.overflow;
+    const overflowState = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const afterScrollbarHidden = document.body.clientWidth;
     document.body.style.overflow = overflowState;
