@@ -217,7 +217,14 @@
         _haveActiveModals = false;
         if (_jsModule is not null)
         {
-            await _jsModule.InvokeVoidAsync("removeBodyStyle");
+            try
+            {
+                await _jsModule.InvokeVoidAsync("removeBodyStyle");
+            }
+            catch (ObjectDisposedException)
+            {
+              // If the we're working in hybrid scenario for Blazor Web App, where JsRuntime is not available, we don't need to do anything
+            }
         }
     }
 
