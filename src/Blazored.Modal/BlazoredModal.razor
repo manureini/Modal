@@ -83,12 +83,12 @@
     // and/or sharing between multiple apps, or that the path can be customized for the app
     // automatically base on the BaseUri found in NavigationManager
 
-    [Inject] 
+    [Inject]
     private IOptions<Settings> Settings { get; set; } = null!;
 
     // stores the basePath for all instances
     private static string? sharedBasePath;
-    
+
     // default location for the JS file
     private const string DefaultLocation = "./";
 
@@ -202,7 +202,7 @@
             _haveActiveModals = true;
             if (_jsModule is null)
                 return;
-            
+
             await _jsModule.InvokeVoidAsync("setBodyStyle");
         }
 
@@ -223,7 +223,7 @@
             }
             catch (ObjectDisposedException)
             {
-              // If the we're working in hybrid scenario for Blazor Web App, where JsRuntime is not available, we don't need to do anything
+                // If the we're working in hybrid scenario for Blazor Web App, where JsRuntime is not available, we don't need to do anything
             }
         }
     }
@@ -252,6 +252,11 @@
     {
         await RemoveEscapeKeyHandler();
         _dotNetObjRef?.Dispose();
+
+        ((ModalService)CascadedModalService).OnModalInstanceAdded -= Update;
+        ((ModalService)CascadedModalService).OnModalCloseRequested -= CloseInstance;
+        NavigationManager.LocationChanged -= CancelModals;
+
         if (_jsModule is not null)
         {
             try
