@@ -5,11 +5,10 @@ using Microsoft.AspNetCore.Components;
 using Blazored.Modal.Tests.Assets;
 using Blazored.Modal.Services;
 using System.Threading.Tasks;
-using static Bunit.ComponentParameterFactory;
 
 namespace Blazored.Modal.Tests
 {
-    public class DisplayTests : TestContext
+    public class DisplayTests : BunitContext
     {
         public DisplayTests()
         {
@@ -26,7 +25,7 @@ namespace Blazored.Modal.Tests
             var modalService = Services.GetService<IModalService>();
             
             // Act
-            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
 
             // Assert
             Assert.Empty(cut.FindAll(".bm-container"));
@@ -37,7 +36,7 @@ namespace Blazored.Modal.Tests
         {
             // Arrange
             var modalService = Services.GetService<IModalService>();
-            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
 
             // Act
             modalService.Show<TestComponent>();
@@ -51,7 +50,7 @@ namespace Blazored.Modal.Tests
         {
             // Arrange
             var modalService = Services.GetService<IModalService>();
-            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
 
             // Act
             modalService.Show<TestComponent>();
@@ -66,7 +65,7 @@ namespace Blazored.Modal.Tests
         {
             // Arrange
             var modalService = Services.GetService<IModalService>();
-            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
 
             // Act
             var options = new ModalOptions
@@ -88,7 +87,7 @@ namespace Blazored.Modal.Tests
         {
             // Arrange
             var modalService = Services.GetService<IModalService>();
-            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
 
             // Act
             var options = new ModalOptions
@@ -110,7 +109,7 @@ namespace Blazored.Modal.Tests
         {
             // Arrange
             var modalService = Services.GetService<IModalService>();
-            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
 
             // Act
             var options = new ModalOptions
@@ -131,7 +130,7 @@ namespace Blazored.Modal.Tests
         {
             // Arrange
             var modalService = Services.GetService<IModalService>();
-            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
             modalService.Show<TestComponent>();
             
             // Act
@@ -146,7 +145,7 @@ namespace Blazored.Modal.Tests
         {
             // Arrange
             var modalService = Services.GetService<IModalService>();
-            var cut = RenderComponent<BlazoredModal>(CascadingValue(modalService));
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
             modalService.Show<TestComponent>("First");
             modalService.Show<TestComponent>("Last");
             
