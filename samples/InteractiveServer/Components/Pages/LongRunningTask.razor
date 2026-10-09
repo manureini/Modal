@@ -1,4 +1,4 @@
-﻿@page "/longrunningtask"
+@page "/longrunningtask"
 
 <h1>Closing Modal after long-running task</h1>
 
@@ -48,7 +48,7 @@
 
         loading.Close();
         var result = await loading.Result;
-        if (result.DataType == typeof(object))
+        if (result.Confirmed && result.Data is null)
             _result = "Modal returned with default ModalResult";
 
         StateHasChanged();

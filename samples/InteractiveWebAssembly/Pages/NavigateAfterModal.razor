@@ -1,4 +1,4 @@
-﻿@page "/navigateAway"
+@page "/navigateAway"
 
 <h1>Navigate away</h1>
 
@@ -26,7 +26,7 @@
 
     [CascadingParameter] public IModalService Modal { get; set; } = default!;
 
-    async void ShowModal()
+    async Task ShowModal()
     {
         var modal = Modal.Show<Confirm>("Do you want to navigate to a different page?");
         var result = await modal.Result;

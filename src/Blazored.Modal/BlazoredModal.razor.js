@@ -1,26 +1,10 @@
-﻿const el = document.body;
-const computedBodyStyle = getComputedStyle(el);
-const originalProps = { overflow: computedBodyStyle.overflow, paddingRight: computedBodyStyle.paddingRight };
+const el = document.body;
 
 let keyupHandler = null;
 let dotNetRef = null;
-
-const getScrollBarWidth = () => {
-    let el = document.createElement("div");
-    el.style.cssText = "overflow:scroll; visibility:hidden; position:absolute;";
-    document.body.appendChild(el);
-    let width = el.offsetWidth - el.clientWidth;
-    el.remove();
-    return width;
-}
-const isScrollbarPresent = () => {
-    const beforeScrollbarHidden = document.body.clientWidth;
-    const overflowState = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const afterScrollbarHidden = document.body.clientWidth;
-    document.body.style.overflow = overflowState;
-    return beforeScrollbarHidden !== afterScrollbarHidden;
-};
+let openModalCount = 0;
+let originalOverflow = '';
+let originalPaddingRight = '';
 
 /**
  * Adds event listener for the Escape key and invokes .NET method
@@ -28,40 +12,48 @@ const isScrollbarPresent = () => {
  */
 export function addEscapeKeyHandler(dotNetObjectReference) {
     // Clear state before adding the handler 
-    removeEscapeKeyHandler()
+    removeEscapeKeyHandler();
     
     dotNetRef = dotNetObjectReference;
     keyupHandler = function (event) {
-        if(event.key === 'Escape') {
-            event.preventDefault()
-            event.stopPropagation()
-            dotNetRef.invokeMethodAsync('HandleEscapeKey')
+        if (event.key === 'Escape') {
+            const hasOpenModal = document.querySelector('.bm-container, [role="dialog"]') !== null;
+            if (hasOpenModal) {
+                event.preventDefault();
+                event.stopPropagation();
+                dotNetRef?.invokeMethodAsync('HandleEscapeKey');
+            }
         }
-    }
+    };
 
-    document.addEventListener('keyup', keyupHandler, true)
+    document.addEventListener('keyup', keyupHandler, true);
 }
 
 /**
  * Clears the event listener for the Escape key and resets state
  */
 export function removeEscapeKeyHandler() {
-    if(keyupHandler) {
-        document.removeEventListener('keyup', keyupHandler, true)
-        keyupHandler = null
-        dotNetRef = null
+    if (keyupHandler) {
+        document.removeEventListener('keyup', keyupHandler, true);
+        keyupHandler = null;
+        dotNetRef = null;
+        openModalCount = 0;
     }
 }
 
 export function setBodyStyle() {
-    if (isScrollbarPresent()) {
-        el.style.paddingRight = `${getScrollBarWidth()}px`;
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    originalOverflow = el.style.overflow;
+    originalPaddingRight = el.style.paddingRight;
+
+    if (scrollBarWidth > 0) {
+        el.style.paddingRight = `${scrollBarWidth}px`;
     }
     
     el.style.overflow = 'hidden';
 }
 
 export function removeBodyStyle() {
-    el.style.overflow = originalProps.overflow || 'auto';
-    el.style.paddingRight = originalProps.paddingRight;
+    el.style.overflow = originalOverflow;
+    el.style.paddingRight = originalPaddingRight;
 }

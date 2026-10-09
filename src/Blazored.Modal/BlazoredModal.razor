@@ -1,4 +1,4 @@
-﻿@using System.Collections.ObjectModel
+@using System.Collections.ObjectModel
 @using Blazored.Modal.Configuration
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.Extensions.Options
@@ -43,14 +43,6 @@
 
     internal event Action? OnModalClosed;
 
-    public BlazoredModal()
-    {
-        if (baseUri != null)
-            return;
-        // creates a lazy object that will determine the baseUri from the first request
-        baseUri = new(() => (NavigationManager.BaseUri ?? "./") + "_content/Blazored.Modal/");
-    }
-
     protected override void OnInitialized()
     {
         if (CascadedModalService == null)
@@ -86,32 +78,18 @@
     [Inject]
     private IOptions<Settings> Settings { get; set; } = null!;
 
-    // stores the basePath for all instances
-    private static string? sharedBasePath;
-
-    // default location for the JS file
-    private const string DefaultLocation = "./";
-
-    // a lazy object that will hold the baseUri
-    private static Lazy<string>? baseUri;
-
-    // gets the baseUri from the lazy object
-    private string? BaseUri => baseUri?.Value;
-
-    // gets the location from the settings
-    private string? Location => Settings.Value.JsPath;
+    private string? _jsPath;
 
     private string JsPath
     {
         get
         {
-            // if the basePath is already set, return it
-            var basePath = sharedBasePath;
-            if (basePath != null)
-                return basePath;
-            // if the location is null, use the default location
-            var str = Location ?? BaseUri;
-            return sharedBasePath = str + "BlazoredModal.razor.js";
+            if (_jsPath != null)
+                return _jsPath;
+
+            var baseUri = (NavigationManager.BaseUri ?? "./") + "_content/Blazored.Modal/";
+            var location = Settings.Value.JsPath ?? baseUri;
+            return _jsPath = location + "BlazoredModal.razor.js";
         }
     }
     #endregion
@@ -121,6 +99,11 @@
         if (firstRender)
         {
             _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", JsPath);
+
+            if (_haveActiveModals)
+            {
+                await _jsModule.InvokeVoidAsync("setBodyStyle");
+            }
 
             _dotNetObjRef = DotNetObjectReference.Create(this);
             if (DisableEscapeKey is not true && _dotNetObjRef is not null)
@@ -148,11 +131,6 @@
         {
             // Gracefully close the modal
             await modal.ModalInstanceRef.CloseAsync(result);
-            if (!_modals.Any())
-            {
-                await ClearBodyStyles();
-            }
-            OnModalClosed?.Invoke();
         }
         else
         {

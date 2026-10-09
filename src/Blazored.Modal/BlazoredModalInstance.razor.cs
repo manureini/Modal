@@ -1,4 +1,4 @@
-﻿using Blazored.Modal.Services;
+using Blazored.Modal.Services;
 using Microsoft.AspNetCore.Components;
 using System.Diagnostics.CodeAnalysis;
 
@@ -11,7 +11,7 @@ public partial class BlazoredModalInstance : IDisposable
 
     [Parameter, EditorRequired] public RenderFragment Content { get; set; } = default!;
     [Parameter, EditorRequired] public ModalOptions Options { get; set; } = default!;
-    [Parameter] public string? Title { get => _title; init => _title ??= value; }
+    [Parameter] public string? Title { get; set; }
     [Parameter] public Guid Id { get; set; }
 
     private string? Position { get; set; }
@@ -52,6 +52,7 @@ public partial class BlazoredModalInstance : IDisposable
 
     // Temporarily add a tabindex of -1 to the close button so it doesn't get selected as the first element by activateFocusTrap
     private readonly Dictionary<string, object> _closeBtnAttributes = new() { { "tabindex", "-1" } };
+    private readonly CancellationTokenSource _disposeCts = new();
     private RenderFragment? _headerContent;
 
     protected override bool ShouldRender()
@@ -66,7 +67,10 @@ public partial class BlazoredModalInstance : IDisposable
     }
 
     protected override void OnInitialized()
-        => ConfigureInstance();
+    {
+        ConfigureInstance();
+        _title ??= Title;
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -142,7 +146,18 @@ public partial class BlazoredModalInstance : IDisposable
 
             StateHasChanged();
 
-            await Task.Delay(400); // Needs to be a bit more than the animation time because of delays in the animation being applied between server and client (at least when using blazor server side), I think.
+            var duration = GetAnimationDuration();
+            if (duration > 0)
+            {
+                try
+                {
+                    await Task.Delay(duration, _disposeCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Delay cancelled because component was disposed or cancelled early
+                }
+            }
         }
 
         await Parent.DismissInstance(Id, modalResult);
@@ -416,6 +431,17 @@ public partial class BlazoredModalInstance : IDisposable
     private void StopListeningToBackgroundClick()
         => _listenToBackgroundClicks = false;
 
+    private int GetAnimationDuration()
+    {
+        // Default CSS animation duration is 300ms. In WebAssembly there is no network
+        // latency so we match 300ms exactly; on Server a 50ms buffer accounts for packet transit.
+        return OperatingSystem.IsBrowser() ? 310 : 350;
+    }
+
     void IDisposable.Dispose()
-        => Parent.OnModalClosed -= AttemptFocus;
+    {
+        _disposeCts.Cancel();
+        _disposeCts.Dispose();
+        Parent.OnModalClosed -= AttemptFocus;
+    }
 }

@@ -1,4 +1,4 @@
-﻿namespace Blazored.Modal.Services;
+namespace Blazored.Modal.Services;
 
 public class ModalResult
 {
@@ -27,5 +27,8 @@ public class ModalResult
         => new(null, null, true);
     
     public static ModalResult Cancel<T>(T payload) 
-        => new(payload, null, true);
+        => new(payload, typeof(T), true);
+
+    public static ModalResult Cancel<T>(T payload, Type? dataType) 
+        => new(payload, dataType, true);
 }

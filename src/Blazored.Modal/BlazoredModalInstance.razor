@@ -15,13 +15,13 @@ else
         @onclick="StopListeningToBackgroundClick">
 
         <FocusTrap @ref="FocusTrap" IsActive="ActivateFocusTrap">
-            <div class="@ModalClass @Size @ModalAnimationClass" role="dialog" aria-modal="true" @onmouseup:stopPropagation="true" @onmousedown:stopPropagation="true">
+            <div class="@ModalClass @Size @ModalAnimationClass" role="dialog" aria-modal="true" aria-labelledby="@(!string.IsNullOrWhiteSpace(_title) ? $"bm-title-{Id}" : null)" @onmouseup:stopPropagation="true" @onmousedown:stopPropagation="true">
                 @if (!HideHeader)
                 {
                     <div class="bm-header">
-                        @if (!string.IsNullOrWhiteSpace(Title))
+                        @if (!string.IsNullOrWhiteSpace(_title))
                         {
-                            <h3 class="bm-title">@Title</h3>
+                            <h3 class="bm-title" id="@($"bm-title-{Id}")">@_title</h3>
                         }
                         @if (HeaderContent != null)
                         {
@@ -29,8 +29,8 @@ else
                         }
                         @if (!HideCloseButton)
                         {
-                            <button type="button" class="bm-close" aria-label="close" @onclick="() => CancelAsync()" @attributes="@_closeBtnAttributes">
-                                <span>&times;</span>
+                            <button type="button" class="bm-close" aria-label="Close" @onclick="() => CancelAsync()" @attributes="@_closeBtnAttributes">
+                                <span aria-hidden="true">&times;</span>
                             </button>
                         }
                     </div>

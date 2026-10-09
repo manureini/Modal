@@ -157,5 +157,62 @@ namespace Blazored.Modal.Tests
             Assert.DoesNotContain("Last", cut.Find(".bm-title").InnerHtml);
             Assert.Single(instances);
         }
+
+        [Fact]
+        public void ModalRendersAccessibleAttributes()
+        {
+            // Arrange
+            var modalService = Services.GetService<IModalService>();
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
+
+            // Act
+            modalService.Show<TestComponent>("Accessible Title");
+
+            // Assert
+            var dialog = cut.Find("div[role='dialog']");
+            var title = cut.Find(".bm-title");
+            var titleId = title.GetAttribute("id");
+
+            Assert.False(string.IsNullOrWhiteSpace(titleId));
+            Assert.Equal(titleId, dialog.GetAttribute("aria-labelledby"));
+
+            var closeButton = cut.Find(".bm-close");
+            Assert.Equal("Close", closeButton.GetAttribute("aria-label"));
+
+            var closeSpan = closeButton.QuerySelector("span");
+            Assert.NotNull(closeSpan);
+            Assert.Equal("true", closeSpan.GetAttribute("aria-hidden"));
+        }
+
+        [Fact]
+        public void ModalClosedEventFiresOnlyOnceOnClose()
+        {
+            // Arrange
+            var modalService = Services.GetService<IModalService>();
+            var cut = Render<BlazoredModal>(ps => ps.AddCascadingValue(modalService!));
+            var closeCount = 0;
+            cut.Instance.OnModalClosed += () => closeCount++;
+
+            var options = new ModalOptions { AnimationType = ModalAnimationType.None };
+            var modalRef = modalService.Show<TestComponent>("Test", options);
+
+            // Act
+            modalRef.Close();
+
+            // Assert
+            Assert.Equal(1, closeCount);
+        }
+
+        [Fact]
+        public void ModalResultCancelPreservesPayloadType()
+        {
+            // Act
+            var cancelResult = ModalResult.Cancel("Payload String");
+
+            // Assert
+            Assert.True(cancelResult.Cancelled);
+            Assert.Equal("Payload String", cancelResult.Data);
+            Assert.Equal(typeof(string), cancelResult.DataType);
+        }
     }
 }

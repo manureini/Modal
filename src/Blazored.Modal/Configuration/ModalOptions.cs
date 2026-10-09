@@ -1,4 +1,4 @@
-﻿namespace Blazored.Modal;
+namespace Blazored.Modal;
 
 public class ModalOptions
 {

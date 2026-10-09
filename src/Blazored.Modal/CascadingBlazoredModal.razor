@@ -1,4 +1,4 @@
-﻿@inject IModalService ModalService
+@inject IModalService ModalService
 
 <CascadingValue Value="@ModalService" IsFixed="true">
     <BlazoredModal HideHeader="@HideHeader"
@@ -13,7 +13,7 @@
                    OverlayCustomClass="@OverlayCustomClass"
                    Size="@Size"
                    SizeCustomClass="@SizeCustomClass"
-                   ActivateFocusTrap="@ActivateFocusTrap"/>
+                   ActivateFocusTrap="@ActivateFocusTrap" />
     @ChildContent
 </CascadingValue>
 
@@ -29,7 +29,6 @@
     [Parameter] public ModalAnimationType? AnimationType { get; set; }
     [Parameter] public bool? UseCustomLayout { get; set; }
     [Parameter] public string? OverlayCustomClass { get; set; }
-    [Parameter] public bool? ContentScrollable { get; set; }
     [Parameter] public bool? ActivateFocusTrap { get; set; }
     [Parameter] public string? PositionCustomClass { get; set; }
     [Parameter] public string? SizeCustomClass { get; set; }
